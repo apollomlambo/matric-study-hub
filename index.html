@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matric Countdown — Grade 12 Study Hub</title>
+<style>
+:root{
+  --ink:#161B22;
+  --paper:#FDFDFB;
+  --paper-dim:#F1EFE9;
+  --line:#D8D4C8;
+  --eng:#B5473A;
+  --eng-soft:#F4E4E1;
+  --math:#2D6E5E;
+  --math-soft:#DFEEE9;
+  --sci:#C98A2C;
+  --sci-soft:#F7E8CE;
+  --life:#3E7A3D;
+  --life-soft:#E1EEDC;
+  --geo:#3B5B92;
+  --geo-soft:#DEE5F2;
+  --muted:#6B7178;
+  --display: "Georgia", "Iowan Old Style", serif;
+  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "SF Mono", "Consolas", "Menlo", monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--ink);color:var(--ink);font-family:var(--body);}
+::selection{background:#3a4656;color:#fff;}
+
+/* ===== Header / exam clock ===== */
+.hero{
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,0.05), transparent 40%),
+    linear-gradient(180deg,#161B22 0%,#1B2430 100%);
+  color:#EDEAE1;
+  padding:38px 24px 30px;
+  border-bottom:6px solid var(--sci);
+}
+.hero-inner{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between;}
+.hero h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,42px);margin:0 0 6px;letter-spacing:0.2px;}
+.hero p.sub{margin:0;color:#B9C0CC;font-size:15px;max-width:480px;line-height:1.5;}
+.stamp{
+  font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--sci);border:1px solid var(--sci);padding:3px 8px;border-radius:3px;display:inline-block;margin-bottom:10px;
+}
+.clock{
+  background:var(--paper);color:var(--ink);border-radius:10px;padding:16px 22px;text-align:center;
+  min-width:210px;box-shadow:0 10px 30px rgba(0,0,0,0.35);
+}
+.clock .num{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;color:var(--eng);}
+.clock .lbl{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+.clock input{
+  margin-top:10px;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:4px;
+  padding:4px 6px;width:130px;color:var(--muted);
+}
+
+/* ===== Tabs ===== */
+.tabbar{
+  max-width:1080px;margin:-22px auto 0;padding:0 24px;display:flex;gap:10px;position:relative;z-index:2;flex-wrap:wrap;
+}
+.tab{
+  flex:1;min-width:160px;background:var(--paper);border:1px solid var(--line);border-bottom:none;
+  border-radius:10px 10px 0 0;padding:14px 16px;cursor:pointer;font-family:var(--body);font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;transition:transform .15s ease;
+}
+.tab:hover{transform:translateY(-2px);}
+.tab .bar{height:4px;border-radius:2px;margin-top:8px;background:var(--paper-dim);overflow:hidden;flex:none;width:100%;position:absolute;left:0;bottom:0;}
+.tab{position:relative;}
+.tab .bar i{display:block;height:100%;width:0%;}
+.tab[data-subject="english"] .bar i{background:var(--eng);}
+.tab[data-subject="maths"] .bar i{background:var(--math);}
+.tab[data-subject="science"] .bar i{background:var(--sci);}
+.tab[data-subject="lifesci"] .bar i{background:var(--life);}
+.tab[data-subject="geography"] .bar i{background:var(--geo);}
+.tab.active{background:var(--paper);box-shadow:0 -4px 14px rgba(0,0,0,0.08);}
+.tab .name{font-size:15px;}
+.tab .pct{font-family:var(--mono);font-size:12px;color:var(--muted);}
+
+/* ===== Main body ===== */
+main{max-width:1080px;margin:0 auto;background:var(--paper);padding:28px 24px 60px;}
+.subject-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+.subject-head h2{font-family:var(--display);font-size:26px;margin:0;}
+.subject-head .tag{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:3px;}
+[data-subj="english"] .tag{background:var(--eng-soft);color:var(--eng);}
+[data-subj="maths"] .tag{background:var(--math-soft);color:var(--math);}
+[data-subj="science"] .tag{background:var(--sci-soft);color:var(--sci);}
+[data-subj="lifesci"] .tag{background:var(--life-soft);color:var(--life);}
+[data-subj="geography"] .tag{background:var(--geo-soft);color:var(--geo);}
+.subject-note{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:640px;line-height:1.5;}
+
+.topic{border:1px solid var(--line);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+.topic-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--paper-dim);cursor:pointer;}
+.topic-head input[type=checkbox]{width:18px;height:18px;accent-color:var(--muted);flex:none;}
+.topic-head h3{margin:0;font-size:16px;font-family:var(--body);font-weight:700;flex:1;}
+.topic-head .chev{transition:transform .2s;color:var(--muted);}
+.topic.open .chev{transform:rotate(180deg);}
+.topic-body{display:none;padding:16px 18px 6px;}
+.topic.open .topic-body{display:block;}
+.topic-summary{font-size:14px;line-height:1.6;color:#33383F;margin:0 0 16px;}
+
+.q{border-top:1px dashed var(--line);padding:14px 0;}
+.q:first-of-type{border-top:none;}
+.q-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.q-text{font-size:14.5px;line-height:1.6;margin:0;font-weight:600;}
+.marks{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;padding-top:2px;}
+.q-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+button.mini, a.mini{
+  font-family:var(--body);font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;
+  padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--ink);
+}
+button.mini:hover, a.mini:hover{background:var(--paper-dim);}
+button.mini.ask{border-color:var(--sci);color:var(--sci);}
+.memo{
+  display:none;margin-top:10px;background:var(--paper-dim);border-left:3px solid var(--muted);
+  padding:10px 12px;border-radius:0 6px 6px 0;font-size:13.5px;line-height:1.6;
+}
+.memo.show{display:block;}
+.memo b{color:var(--ink);}
+
+/* ===== AI tutor ===== */
+.tutor{border:2px solid var(--sci);border-radius:12px;padding:18px;margin:34px 0 10px;background:#FFFCF5;}
+.tutor h2{font-family:var(--display);margin:0 0 4px;font-size:22px;}
+.tutor p.desc{color:var(--muted);font-size:13.5px;margin:0 0 14px;}
+.key-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.key-row input[type=password], .key-row input[type=text]{flex:1;min-width:220px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:12.5px;}
+.key-row select{padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-family:var(--body);font-size:13px;}
+#chatlog{height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px;margin-bottom:10px;}
+.msg{margin-bottom:12px;font-size:14px;line-height:1.55;}
+.msg.user{color:var(--ink);}
+.msg.user b{color:var(--math);}
+.msg.ai b{color:var(--sci);}
+.msg.ai{white-space:pre-wrap;}
+.chat-row{display:flex;gap:8px;}
+.chat-row textarea{flex:1;resize:vertical;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font-family:var(--body);font-size:14px;}
+.chat-row button{background:var(--sci);color:#fff;border:none;padding:0 20px;border-radius:6px;font-weight:700;cursor:pointer;}
+.chat-row button:disabled{opacity:0.5;cursor:default;}
+.small-note{font-size:11.5px;color:var(--muted);margin-top:8px;}
+
+footer{max-width:1080px;margin:0 auto;padding:20px 24px 50px;color:#8790A0;font-size:12px;text-align:center;background:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="stamp">NSC Final Exams · Grade 12</span>
+      <h1>Study Hub — English · Maths · Physical Sciences</h1>
+      <p class="sub">Topic-by-topic revision with practice questions, full memos, and an AI tutor on call whenever something doesn't make sense. Tick off topics as you go.</p>
+    </div>
+    <div class="clock">
+      <div class="num" id="daysLeft">--</div>
+      <div class="lbl">Days to exams</div>
+      <input type="date" id="examDate">
+    </div>
+  </div>
+</div>
+
+<div class="tabbar" id="tabbar">
+  <div class="tab active" data-subject="english">
+    <div><div class="name">English</div><div class="pct" id="pct-english">0% done</div></div>
+    <div class="bar"><i id="bar-english"></i></div>
+  </div>
+  <div class="tab" data-subject="maths">
+    <div><div class="name">Mathematics</div><div class="pct" id="pct-maths">0% done</div></div>
+    <div class="bar"><i id="bar-maths"></i></div>
+  </div>
+  <div class="tab" data-subject="science">
+    <div><div class="name">Physical Sciences</div><div class="pct" id="pct-science">0% done</div></div>
+    <div class="bar"><i id="bar-science"></i></div>
+  </div>
+  <div class="tab" data-subject="lifesci">
+    <div><div class="name">Life Sciences</div><div class="pct" id="pct-lifesci">0% done</div></div>
+    <div class="bar"><i id="bar-lifesci"></i></div>
+  </div>
+  <div class="tab" data-subject="geography">
+    <div><div class="name">Geography</div><div class="pct" id="pct-geography">0% done</div></div>
+    <div class="bar"><i id="bar-geography"></i></div>
+  </div>
+</div>
+
+<main>
+  <section id="panel-english" data-subj="english">
+    <div class="subject-head"><h2>English</h2><span class="tag">HL / FAL · Paper 1–3</span></div>
+    <p class="subject-note">Focus areas for the finals: comprehension &amp; summary technique, language structures, essay and transactional writing, and unseen poetry. Set-work literature (novel/drama) essays follow the same planning method as the discursive essay below — practise that structure and apply it to your prescribed text.</p>
+    <div id="topics-english"></div>
+  </section>
+
+  <section id="panel-maths" data-subj="maths" style="display:none">
+    <div class="subject-head"><h2>Mathematics</h2><span class="tag">Paper 1 &amp; 2</span></div>
+    <p class="subject-note">Paper 1 leans on algebra, sequences, finance, functions and calculus. Paper 2 leans on geometry, trig, statistics and probability. Marks are won on method — always show every step, even when you're sure of the answer.</p>
+    <div id="topics-maths"></div>
+  </section>
+
+  <section id="panel-science" data-subj="science" style="display:none">
+    <div class="subject-head"><h2>Physical Sciences</h2><span class="tag">Paper 1 (Physics) · Paper 2 (Chemistry)</span></div>
+    <p class="subject-note">Paper 1 is mechanics, electricity and waves. Paper 2 is chemical change and organic chemistry. Units and significant figures cost easy marks if you rush — always finish an answer with the correct unit.</p>
+    <div id="topics-science"></div>
+  </section>
+
+  <section id="panel-lifesci" data-subj="lifesci" style="display:none">
+    <div class="subject-head"><h2>Life Sciences</h2><span class="tag">Paper 1 &amp; 2</span></div>
+    <p class="subject-note">Paper 1 usually covers DNA/genetics, evolution and human reproduction; Paper 2 covers the nervous &amp; endocrine systems, homeostasis and human impact on the environment (this can shift slightly by year, so check your own province's exam guideline). Diagrams carry real marks — label neatly and learn the flow of each process, not just isolated facts.</p>
+    <div id="topics-lifesci"></div>
+  </section>
+
+  <section id="panel-geography" data-subj="geography" style="display:none">
+    <div class="subject-head"><h2>Geography</h2><span class="tag">Paper 1 (Theory) · Paper 2 (Maps &amp; Skills)</span></div>
+    <p class="subject-note">Paper 1 is theory (climate/weather, geomorphology, rural &amp; urban settlement, economic geography). Paper 2 tests map work, GIS concepts and calculations (scale, gradient, orientation) using a topographic and orthophoto map. Practise the calculation methods until they're automatic — they're guaranteed, easy marks if you know the formula.</p>
+    <div id="topics-geography"></div>
+  </section>
+
+  <div class="tutor" style="border-color: var(--geo); background:#F6F8FC;">
+    <h2>2023 NSC Past Papers &amp; Memos</h2>
+    <p class="desc">Official November 2023 papers from the Department of Basic Education (DBE). Each link opens the real exam paper or memo as a PDF — perfect for full timed practice once you've worked through the topics above.</p>
+    <div id="pastpapers"></div>
+  </div>
+
+  <div class="tutor">
+    <h2>Ask the AI tutor</h2>
+    <p class="desc">Explains any topic or question in plain language, step by step. Powered by Groq (Llama 3.3 70B) — runs entirely in this browser, nothing is sent anywhere except Groq.</p>
+    <div class="key-row">
+      <input type="password" id="groqKey" placeholder="Groq API key (gsk_...)">
+      <select id="tutorSubject">
+        <option value="English">English</option>
+        <option value="Mathematics">Mathematics</option>
+        <option value="Physical Sciences">Physical Sciences</option>
+        <option value="Life Sciences">Life Sciences</option>
+        <option value="Geography">Geography</option>
+      </select>
+      <button class="mini" id="saveKey">Save key</button>
+    </div>
+    <div id="chatlog"></div>
+    <div id="imagePreviewRow" style="display:none; margin-bottom:8px;">
+      <img id="imagePreview" style="max-height:90px;border-radius:6px;border:1px solid var(--line);vertical-align:middle;">
+      <button class="mini" id="clearImage" style="vertical-align:middle;margin-left:8px;">Remove photo</button>
+    </div>
+    <div class="chat-row">
+      <textarea id="chatInput" placeholder="e.g. Explain how to find the equation of a tangent to a curve, step by step. You can also paste (Ctrl+V) or upload a photo of a question."></textarea>
+      <button id="sendBtn">Ask</button>
+    </div>
+    <div class="q-actions" style="margin-top:8px;">
+      <button class="mini" id="uploadBtn">📷 Upload photo / screenshot</button>
+      <input type="file" id="imageFile" accept="image/*" style="display:none;">
+      <span class="small-note" style="margin:0;">or paste a screenshot straight into the message box (Ctrl+V)</span>
+    </div>
+    <p class="small-note">Your API key is stored only in this browser (localStorage) and is never shown to anyone else who opens this file on a different device. Because the key is visible in this page's saved copy, don't share this HTML file publicly once your key is in it — if that happens, regenerate the key on console.groq.com.</p>
+  </div>
+</main>
+
+<footer>Built for exam season · CAPS-aligned Grade 12 revision · Keep going, one topic at a time.</footer>
+
+<script>
+/* ---------------- Countdown ---------------- */
+const examDateInput = document.getElementById('examDate');
+const savedDate = localStorage.getItem('examDate') || '2026-11-02';
+examDateInput.value = savedDate;
+function updateCountdown(){
+  const target = new Date(examDateInput.value + 'T08:00:00');
+  const now = new Date();
+  const diff = Math.ceil((target - now) / (1000*60*60*24));
+  document.getElementById('daysLeft').textContent = diff > 0 ? diff : 0;
+  localStorage.setItem('examDate', examDateInput.value);
+}
+examDateInput.addEventListener('change', updateCountdown);
+updateCountdown();
+
+/* ---------------- Content data ---------------- */
+const DATA = {
+english: [
+  {
+    id:'e1', name:'Comprehension & Summary',
+    summary:'Read the passage twice before answering: once for overall meaning, once hunting for the answer to each question. Answer in your own words, quote only when asked to, and for summaries pick out only the required number of points, in your own words, within the word limit.',
+    questions:[
+      {q:'A sentence from a passage reads: "Despite the drought, farmers refused to abandon their land, driven by decades of memory and stubborn hope." Identify the tone and explain how ONE word choice creates it.', marks:3,
+       memo:'<b>Tone:</b> resolute / determined / quietly defiant.<br><b>Word choice:</b> "stubborn" — normally a negative word, used here positively to show unshakeable determination in the face of hardship. Any word (e.g. "refused", "hope") with a clear tone-link explanation earns the mark.'},
+      {q:'Explain the difference between a fact and an opinion, and give one example of each based on this claim: "Cape Town received 250mm less rain than average this year, which is a disaster for the province."', marks:3,
+       memo:'<b>Fact:</b> "Cape Town received 250mm less rain than average" — measurable, verifiable statistic.<br><b>Opinion:</b> "which is a disaster for the province" — a value judgement that can be debated.<br>Award marks for correctly identifying which part is which and explaining why (verifiable vs. judgement).'},
+    ]
+  },
+  {
+    id:'e2', name:'Language Structures & Conventions',
+    summary:'This section tests register, tone, figures of speech, sentence types and editing skills — often via an advertisement or cartoon. Learn the terminology (e.g. rhetorical question, hyperbole, register) precisely, since markers want the correct term, not just a description.',
+    questions:[
+      {q:'Identify the figure of speech in "The exam was a mountain I had to climb" and explain its effect.', marks:2,
+       memo:'<b>Figure of speech:</b> metaphor.<br><b>Effect:</b> compares the exam directly to a mountain (without using "like/as"), emphasising how difficult and overwhelming it felt.'},
+      {q:'Rewrite this sentence in the passive voice: "The teacher marked the essays."', marks:2,
+       memo:'<b>Answer:</b> "The essays were marked by the teacher." — subject and object swap; verb becomes "was/were + past participle".'},
+    ]
+  },
+  {
+    id:'e3', name:'Essay Writing (Discursive / Argumentative)',
+    summary:'Plan for 5 minutes before writing: thesis statement, 3–4 main points, and a conclusion that doesn\'t just repeat the intro. A discursive essay looks at both sides; an argumentative essay takes and defends one side. Aim for clear paragraphing — one idea per paragraph, linked with connecting words.',
+    questions:[
+      {q:'Write a plan (thesis + 3 topic sentences + conclusion idea) for a discursive essay: "Social media does more harm than good to teenagers."', marks:10,
+       memo:'A strong plan needs: <b>Thesis</b> stating the essay will weigh both sides before reaching a view. <b>Point 1 (harm):</b> mental health/comparison culture. <b>Point 2 (benefit):</b> connection and access to information. <b>Point 3 (harm or nuance):</b> depends on usage habits, not the platform itself. <b>Conclusion:</b> a balanced final judgement, not a restatement of the intro. Full marks require logical flow between points and a clear own-voice conclusion.'},
+    ]
+  },
+  {
+    id:'e4', name:'Transactional Writing',
+    summary:'Formal letters, reports, obituaries, and formal/informal emails each have a fixed format — learn the layout for each (heading, salutation, sign-off) since format carries real marks. Keep tone consistent with the text type: formal for letters/reports, journalistic for obituaries.',
+    questions:[
+      {q:'List the five key structural elements a formal letter of complaint must include.', marks:5,
+       memo:'1) Sender\'s address (top right). 2) Date. 3) Recipient\'s address/designation. 4) Formal salutation ("Dear Sir/Madam" or named person) and heading stating the subject. 5) Formal sign-off ("Yours faithfully"/"Yours sincerely" matched correctly to the salutation used).'},
+    ]
+  },
+  {
+    id:'e5', name:'Unseen Poetry',
+    summary:'Read the poem three times: for literal meaning, for structure/sound devices, and for theme. Always link a device (rhyme, enjambment, imagery, repetition) to its effect on meaning — never name a device without explaining why the poet used it.',
+    questions:[
+      {q:'A poem ends with the single word "Silence." standing alone on its own line. Explain the effect of this structural choice.', marks:3,
+       memo:'Isolating the word on its own line forces the reader to pause, mirroring the silence being described. It creates emphasis and a sense of finality/emptiness, giving the ending emotional weight the surrounding lines could not achieve alone.'},
+    ]
+  },
+  {
+    id:'e6', name:'Literature Essay Technique (Novel / Drama)',
+    summary:'Whatever your set work, essay questions usually ask you to argue a view about a character, theme or the writer\'s technique. Use the same planning method as the discursive essay, but every point must be backed by specific evidence from the text (a paraphrased incident or short, well-chosen quote).',
+    questions:[
+      {q:'Outline the structure you would use to answer: "Discuss how the main character changes over the course of the text." (structure only, no text-specific content)', marks:5,
+       memo:'<b>Intro:</b> thesis stating the overall direction of the character\'s change. <b>Body paragraph 1:</b> the character at the start (with evidence). <b>Body paragraph 2:</b> the turning point/cause of change (with evidence). <b>Body paragraph 3:</b> the character by the end, and what the change reveals about the text\'s theme. <b>Conclusion:</b> sum up the significance of the change, not just repeat it.'},
+    ]
+  },
+  {
+    id:'e7', name:'Visual Literacy (Cartoons & Advertisements)',
+    summary:'Visual texts combine image and text to persuade or entertain. Learn to identify persuasive techniques (emotive appeal, bias, exaggeration, symbolism, slogans) and comment on how image and caption work together to create meaning.',
+    questions:[
+      {q:'An advertisement shows a smiling family around a car with the slogan "Freedom starts here." Identify ONE persuasive technique used and explain its effect.', marks:3,
+       memo:'<b>Technique:</b> emotive appeal / association — linking the product with an abstract value (freedom) and reinforcing it with an image of a happy family. <b>Effect:</b> persuades the viewer to associate the car with positive feelings and independence, making them want to buy it rather than weighing up the product\'s actual features.'},
+      {q:'In a cartoon, an exaggerated feature (e.g. an oversized head) is often used to represent a public figure. Name this technique and explain its purpose.', marks:2,
+       memo:'<b>Technique:</b> caricature. <b>Purpose:</b> to exaggerate a distinctive feature for comic or satirical effect, usually to mock or criticise the figure\'s characteristics or actions.'},
+    ]
+  },
+  {
+    id:'e8', name:'Novel / Drama Contextual Questions',
+    summary:'Unlike the full essay, contextual questions give you a short extract and ask specific short-answer questions about it (character, context, language techniques, quotes). Always refer back to the given extract precisely, and let the mark allocation guide how much detail to give.',
+    questions:[
+      {q:'In a contextual question you are asked to explain the meaning of a line "in your own words." Why is it important not to simply repeat the words from the extract?', marks:2,
+       memo:'Repeating the exact words only shows that you can locate the quote, not that you understand it. Using your own words demonstrates genuine comprehension and interpretation of the text, which is exactly what "in your own words" is testing.'},
+      {q:'Explain why understanding the context (what happens just before and after a given extract) is essential when answering contextual questions.', marks:3,
+       memo:'Context shapes the meaning of dialogue, tone and motivation — the same line can mean something different depending on what has just happened. Understanding context helps you avoid misreading a character\'s intention or tone (e.g. sarcasm vs. sincerity), and shows the extract\'s significance within the larger plot.'},
+    ]
+  },
+],
+maths: [
+  {
+    id:'m1', name:'Sequences & Series',
+    summary:'Know the difference between arithmetic (constant common difference d) and geometric (constant common ratio r) sequences, and their nth-term and sum formulas. Quadratic (second-difference) sequences appear too — find the constant second difference to get "a" in Tn = an² + bn + c.',
+    questions:[
+      {q:'The first three terms of an arithmetic sequence are 5; 11; 17. Determine the 20th term.', marks:3,
+       memo:'d = 11 − 5 = 6. Tn = a + (n−1)d = 5 + (n−1)(6). T20 = 5 + 19(6) = 5 + 114 = <b>119</b>.'},
+      {q:'A geometric series has a = 3 and r = 2. Calculate the sum of the first 10 terms.', marks:3,
+       memo:'Sn = a(r^n − 1)/(r − 1) = 3(2^10 − 1)/(2−1) = 3(1024 − 1) = 3(1023) = <b>3069</b>.'},
+    ]
+  },
+  {
+    id:'m2', name:'Finance, Growth & Decay',
+    summary:'Distinguish simple vs. compound growth, and nominal vs. effective interest rates. For annuities (loans/investments with regular payments), the timeline diagram is your best friend — draw it before choosing between the future value or present value annuity formula.',
+    questions:[
+      {q:'R10 000 is invested at 8% p.a. compounded quarterly for 3 years. Calculate the final value.', marks:4,
+       memo:'A = P(1 + i/n)^(nt) = 10000(1 + 0.08/4)^(4×3) = 10000(1.02)^12 = 10000 × 1.26824… = <b>R12 682.42</b> (rounded to the nearest cent).'},
+      {q:'Convert a nominal interest rate of 12% p.a. compounded monthly to an effective annual rate.', marks:3,
+       memo:'i_eff = (1 + i_nom/n)^n − 1 = (1 + 0.12/12)^12 − 1 = (1.01)^12 − 1 = 1.126825 − 1 = <b>12.68%</b>.'},
+    ]
+  },
+  {
+    id:'m3', name:'Functions, Inverses & Logarithms',
+    summary:'Master the shapes and key features (intercepts, asymptotes, turning points) of linear, quadratic, hyperbolic, exponential and log graphs. To find an inverse, swap x and y and make y the subject; remember log is the inverse of exponential.',
+    questions:[
+      {q:'Determine the inverse of f(x) = 2^x, and state its domain.', marks:3,
+       memo:'Swap: x = 2^y → y = log₂(x), so <b>f⁻¹(x) = log₂x</b>. Domain of f⁻¹: <b>x &gt; 0</b> (since it\'s the range of f(x)=2^x).'},
+      {q:'For g(x) = 3/(x−1) + 2, write down the equations of the asymptotes.', marks:2,
+       memo:'Vertical asymptote: <b>x = 1</b> (where denominator = 0). Horizontal asymptote: <b>y = 2</b> (the value added outside the fraction).'},
+    ]
+  },
+  {
+    id:'m4', name:'Differential Calculus',
+    summary:'Learn the first-principles definition once, then rely on the power rule for everyday differentiation. Remember: the derivative gives the gradient of the tangent at a point, and is used to find stationary points (where f\'(x) = 0).',
+    questions:[
+      {q:'Differentiate f(x) = 4x³ − 5x² + 2x − 7 from first principles is not required here — just find f\'(x) using the rules.', marks:3,
+       memo:'f\'(x) = 12x² − 10x + 2 (apply power rule term by term: bring down the power, reduce power by 1; constant term differentiates to 0).'},
+      {q:'Determine the x-coordinates of the stationary points of f(x) = x³ − 3x² − 9x + 5.', marks:4,
+       memo:'f\'(x) = 3x² − 6x − 9. Set f\'(x)=0: 3(x² − 2x − 3)=0 → 3(x−3)(x+1)=0 → <b>x = 3 or x = −1</b>.'},
+    ]
+  },
+  {
+    id:'m5', name:'Analytical Geometry',
+    summary:'This topic is coordinate-based algebra: distance, gradient, midpoint formulas, and the equation of a line or circle. Sketch a rough diagram first — it prevents sign errors and helps you see which formula applies.',
+    questions:[
+      {q:'Determine the equation of the straight line passing through A(1; 2) and B(4; 11).', marks:4,
+       memo:'m = (11−2)/(4−1) = 9/3 = 3. Using y − y₁ = m(x − x₁) with A(1;2): y − 2 = 3(x − 1) → <b>y = 3x − 1</b>.'},
+      {q:'Determine the centre and radius of the circle x² + y² − 4x + 6y − 12 = 0.', marks:4,
+       memo:'Complete the square: (x²−4x+4) + (y²+6y+9) = 12 + 4 + 9 → (x−2)² + (y+3)² = 25. <b>Centre (2; −3), radius = 5.</b>'},
+    ]
+  },
+  {
+    id:'m6', name:'Trigonometry',
+    summary:'Know the special angles (0°, 30°, 45°, 60°, 90°) without a calculator, the CAST diagram for signs in each quadrant, and the basic identities (sin²θ + cos²θ = 1, tanθ = sinθ/cosθ). Compound and double angle formulas are given on the formula sheet — practise picking the right one.',
+    questions:[
+      {q:'Simplify: sin²θ + cos²θ + tanθ·cosθ', marks:3,
+       memo:'sin²θ + cos²θ = 1 (identity). tanθ·cosθ = (sinθ/cosθ)·cosθ = sinθ. Final answer: <b>1 + sinθ</b>.'},
+      {q:'Solve for θ ∈ [0°; 360°]: 2sinθ − 1 = 0', marks:4,
+       memo:'sinθ = 1/2. Reference angle = 30°. Sin is positive in Q1 and Q2: <b>θ = 30° or θ = 150°</b>.'},
+    ]
+  },
+  {
+    id:'m7', name:'Statistics & Probability',
+    summary:'For statistics, know how to read a box-and-whisker plot, calculate standard deviation, and interpret a scatter plot / line of best fit (regression). For probability, master the addition rule, the multiplication rule (independent events), and tree diagrams / contingency tables.',
+    questions:[
+      {q:'A data set has a mean of 20 and standard deviation of 4. Explain what it means if a data value is 28.', marks:2,
+       memo:'28 is 2 standard deviations above the mean ((28−20)/4 = 2), meaning it is relatively far from the average — an unusually high value in the set.'},
+      {q:'P(A) = 0.4, P(B) = 0.5, and A and B are independent. Calculate P(A and B).', marks:2,
+       memo:'For independent events: P(A and B) = P(A) × P(B) = 0.4 × 0.5 = <b>0.2</b>.'},
+    ]
+  },
+  {
+    id:'m8', name:'Euclidean Geometry (Circles)',
+    summary:'Learn the circle theorems (angle at centre = 2× angle at circumference; angles in the same segment are equal; angle in a semicircle = 90°; opposite angles of a cyclic quadrilateral are supplementary; tangent-chord angle). Always state the theorem you\'re using as your reason.',
+    questions:[
+      {q:'O is the centre of a circle. The angle at the centre subtended by chord AB is 120°. Calculate the angle subtended by the same chord at the circumference.', marks:3,
+       memo:'Angle at centre = 2 × angle at circumference (same arc/chord). So angle at circumference = 120° ÷ 2 = <b>60°</b>.'},
+      {q:'State the circle theorem used to prove that opposite angles of a cyclic quadrilateral are supplementary.', marks:2,
+       memo:'The opposite angles of a cyclic quadrilateral are supplementary (add up to 180°) — this is a standard circle theorem, often abbreviated "opp. ∠s of cyclic quad."'},
+    ]
+  },
+  {
+    id:'m9', name:'Calculus Applications (Cubic Graphs & Optimisation)',
+    summary:'Use the derivative to sketch cubic graphs (find turning points where f\'(x)=0, and use f\'\'(x) to test whether each is a maximum or minimum) and to solve optimisation problems — finding a maximum or minimum value in a real-world context, such as maximising volume or area.',
+    questions:[
+      {q:'A cubic function has stationary points at x = −1 and x = 3. If f\'\'(x) = 6x − 4, determine which stationary point is a local maximum and which is a local minimum.', marks:4,
+       memo:'At x = −1: f\'\'(−1) = 6(−1) − 4 = −10 &lt; 0, so <b>x = −1 is a local maximum</b>. At x = 3: f\'\'(3) = 6(3) − 4 = 14 &gt; 0, so <b>x = 3 is a local minimum</b>. (Second derivative test: negative = max, positive = min.)'},
+      {q:'An open box is made from a square sheet of cardboard with side 20 cm, by cutting squares of side x from each corner and folding up the sides. The volume is V(x) = x(20−2x)². Determine the value of x that maximises the volume.', marks:5,
+       memo:'Expand: V(x) = x(400 − 80x + 4x²) = 400x − 80x² + 4x³. V\'(x) = 400 − 160x + 12x². Set V\'(x) = 0: 12x² − 160x + 400 = 0 → divide by 4: 3x² − 40x + 100 = 0. Quadratic formula: x = [40 ± √(1600−1200)]/6 = [40 ± 20]/6, so x = 10 or x = 10/3. Since x must be less than 10 for a valid box, <b>x = 10/3 ≈ 3.33 cm</b> maximises the volume.'},
+    ]
+  },
+],
+science: [
+  {
+    id:'s1', name:'Momentum & Impulse',
+    summary:'Momentum p = mv is a vector — direction matters, so define a positive direction before starting any problem. Impulse (F·Δt) equals the change in momentum. Conservation of momentum applies to any closed, isolated system (collisions, explosions).',
+    questions:[
+      {q:'A 0.5 kg ball moving at 6 m/s to the right collides with a wall and rebounds at 4 m/s to the left. Calculate the impulse on the ball.', marks:4,
+       memo:'Take right as positive. p_initial = 0.5×6 = 3 kg·m/s. p_final = 0.5×(−4) = −2 kg·m/s. Impulse = Δp = p_final − p_initial = −2 − 3 = <b>−5 kg·m/s (5 kg·m/s to the left)</b>.'},
+      {q:'State the law of conservation of linear momentum.', marks:2,
+       memo:'The total linear momentum of an isolated (closed) system remains constant / is conserved, provided no external (net) force acts on the system.'},
+    ]
+  },
+  {
+    id:'s2', name:'Vertical Projectile Motion',
+    summary:'Choose a positive direction (usually up) and stick with it for the whole problem. Use the equations of motion (v = u + at, etc.) with g = −9.8 m/s² (or as your positive direction dictates). At the highest point, velocity = 0.',
+    questions:[
+      {q:'A ball is thrown vertically upward at 20 m/s. Calculate the maximum height reached (ignore air resistance, g = 9.8 m/s²).', marks:4,
+       memo:'Take up as positive. v² = u² + 2aΔy → 0 = (20)² + 2(−9.8)Δy → 0 = 400 − 19.6Δy → Δy = 400/19.6 = <b>20.41 m</b>.'},
+    ]
+  },
+  {
+    id:'s3', name:'Work, Energy & Power',
+    summary:'Work is done when a force causes displacement (W = F·Δx·cosθ). The work-energy theorem links net work to change in kinetic energy. Power is the rate of doing work — watch your units (Joules, Watts, seconds).',
+    questions:[
+      {q:'A 60 kg crate is pushed 5 m across a floor by a horizontal force of 150 N against a friction force of 40 N. Calculate the net work done.', marks:4,
+       memo:'W_applied = 150×5 = 750 J. W_friction = −40×5 = −200 J. Net work = 750 − 200 = <b>550 J</b>.'},
+    ]
+  },
+  {
+    id:'s4', name:'Electric Circuits',
+    summary:'Ohm\'s law (V = IR) applies to resistors, not to the whole circuit unless it\'s a single resistor. In series, current is constant and voltages add; in parallel, voltage is constant and currents add. Don\'t forget internal resistance: EMF = I(R + r).',
+    questions:[
+      {q:'Two resistors of 4 Ω and 6 Ω are connected in series to a 12 V battery (assume no internal resistance). Calculate the current in the circuit.', marks:3,
+       memo:'R_total = 4 + 6 = 10 Ω. I = V/R = 12/10 = <b>1.2 A</b>.'},
+      {q:'A battery has EMF 9 V and internal resistance 1 Ω. When connected to a resistor, the current is 2 A. Calculate the terminal voltage.', marks:3,
+       memo:'V_terminal = EMF − I·r = 9 − (2×1) = <b>7 V</b>.'},
+    ]
+  },
+  {
+    id:'s5', name:'Chemical Equilibrium',
+    summary:'Equilibrium is dynamic — forward and reverse reaction rates are equal, not zero. Use Le Chatelier\'s principle to predict shifts: the system opposes any change in concentration, pressure, volume or temperature. Kc only changes with temperature.',
+    questions:[
+      {q:'For the reaction N₂(g) + 3H₂(g) ⇌ 2NH₃(g), the forward reaction is exothermic. Predict and explain the effect of increasing temperature on the yield of NH₃.', marks:3,
+       memo:'Increasing temperature shifts the equilibrium in the endothermic (reverse) direction to absorb the extra heat, so the yield of NH₃ <b>decreases</b>.'},
+    ]
+  },
+  {
+    id:'s6', name:'Acids & Bases',
+    summary:'Know the Lowry-Brønsted definitions (acid = proton donor, base = proton acceptor), the pH scale (pH = −log[H₃O⁺]), and how to distinguish strong/weak acids from concentrated/dilute ones (strength = degree of ionisation; concentration = moles per litre).',
+    questions:[
+      {q:'Calculate the pH of a solution with [H₃O⁺] = 1 × 10⁻³ mol/dm³.', marks:2,
+       memo:'pH = −log(1×10⁻³) = <b>3</b>.'},
+      {q:'Explain the difference between a strong acid and a concentrated acid.', marks:3,
+       memo:'<b>Strong acid:</b> ionises completely (~100%) in water, regardless of how much acid is dissolved. <b>Concentrated acid:</b> has a large number of moles of acid per unit volume of solution — concentration is about quantity, strength is about degree of ionisation. A strong acid can still be dilute, and a weak acid can still be concentrated.'},
+    ]
+  },
+  {
+    id:'s7', name:'Electrochemistry',
+    summary:'Galvanic cells convert chemical energy to electrical energy spontaneously (used in batteries); electrolytic cells use electrical energy to force a non-spontaneous reaction (used in electroplating/refining). In both, oxidation happens at the anode and reduction at the cathode — but which electrode is positive/negative flips between the two cell types.',
+    questions:[
+      {q:'State one key difference between a galvanic cell and an electrolytic cell.', marks:2,
+       memo:'A galvanic cell generates electrical energy from a spontaneous redox reaction (e.g. a battery); an electrolytic cell uses an external power source to drive a non-spontaneous redox reaction (e.g. electroplating). (Any correctly explained difference — energy conversion direction, spontaneity, or electrode polarity — earns the mark.)'},
+    ]
+  },
+  {
+    id:'s8', name:'Organic Chemistry',
+    summary:'Learn to name and draw the homologous series (alkanes, alkenes, alkynes, alcohols, carboxylic acids, esters etc.) using IUPAC rules, and recognise the functional group of each. Reaction types to know: addition, elimination, substitution, esterification.',
+    questions:[
+      {q:'Give the IUPAC name of CH₃–CH₂–CH₂–OH.', marks:2,
+       memo:'<b>Propan-1-ol</b> — three carbons (propan-) with the hydroxyl (-ol) group on carbon 1.'},
+      {q:'Name the type of reaction when an alkene reacts with H₂ in the presence of a catalyst to form an alkane.', marks:2,
+       memo:'<b>Addition reaction</b> (specifically hydrogenation) — atoms are added across the C=C double bond, which becomes a single bond.'},
+    ]
+  },
+  {
+    id:'s9', name:'Electrodynamics (Generators & Motors)',
+    summary:'Electromagnetic induction (Faraday\'s Law) is the basis of generators — a changing magnetic flux induces an EMF. Motors work on the opposite principle: a current-carrying conductor in a magnetic field experiences a force (the motor effect).',
+    questions:[
+      {q:'State Faraday\'s Law of electromagnetic induction.', marks:3,
+       memo:'The magnitude of the induced EMF is directly proportional to the rate of change of magnetic flux linkage (i.e. proportional to the rate at which magnetic flux through a circuit changes).'},
+      {q:'Explain one way to increase the EMF generated by a simple AC generator.', marks:2,
+       memo:'Any one of: increase the number of turns on the coil; increase the strength of the magnetic field; increase the speed of rotation of the coil. (Each increases the rate of change of flux, increasing the induced EMF.)'},
+    ]
+  },
+  {
+    id:'s10', name:'Waves, Sound & the Doppler Effect',
+    summary:'The Doppler effect is the change in observed frequency/wavelength of a wave due to relative motion between source and observer. Be able to explain qualitatively why frequency increases or decreases based on the direction of motion.',
+    questions:[
+      {q:'An ambulance approaches a stationary observer with its siren on. Explain, using the Doppler effect, why the pitch of the siren sounds higher as it approaches.', marks:3,
+       memo:'As the ambulance moves toward the observer, each successive sound wave is emitted from a position closer to the observer than the last, compressing the wavefronts (decreasing wavelength). This increases the frequency of the sound waves reaching the observer, and since pitch is directly related to frequency, the siren sounds higher-pitched.'},
+    ]
+  },
+  {
+    id:'s11', name:'Rate & Extent of Reaction',
+    summary:'Reaction rate is affected by concentration, temperature, surface area, catalysts and pressure (for gases) — all explained via collision theory (more frequent and more energetic successful collisions = faster rate).',
+    questions:[
+      {q:'Using collision theory, explain why increasing the temperature of a reaction increases its rate.', marks:3,
+       memo:'Increasing temperature increases the kinetic energy of the reacting particles, so they move faster and collide more frequently — and, more importantly, a greater proportion of collisions now have energy equal to or greater than the activation energy, resulting in more successful (effective) collisions per second, which increases the reaction rate.'},
+      {q:'Explain how a catalyst increases the rate of a reaction without being consumed.', marks:2,
+       memo:'A catalyst provides an alternative reaction pathway with a lower activation energy, allowing a greater proportion of collisions to be successful, which increases the rate. It is regenerated at the end of the reaction, so it is not consumed overall.'},
+    ]
+  },
+],
+lifesci: [
+  {
+    id:'l1', name:'DNA, Genes & Chromosomes',
+    summary:'DNA is the code stored in chromosomes; a gene is a specific section of DNA that codes for a protein/trait. Know the structure of DNA (double helix, base pairing A-T, C-G), and the basic idea of replication before cell division.',
+    questions:[
+      {q:'State the base-pairing rule in DNA and explain why it matters for replication.', marks:3,
+       memo:'Adenine always pairs with thymine (A-T), and cytosine always pairs with guanine (C-G) — held together by hydrogen bonds. This complementary pairing means each strand can act as a template to build an identical copy during replication, ensuring genetic information is copied accurately.'},
+    ]
+  },
+  {
+    id:'l2', name:'Meiosis & Genetic Crosses',
+    summary:'Meiosis produces genetic variation through crossing over and independent assortment, and halves the chromosome number (producing gametes). For genetic crosses, always set up a clear Punnett square, and know how to interpret monohybrid and dihybrid ratios.',
+    questions:[
+      {q:'In pea plants, tall (T) is dominant over short (t). Cross a heterozygous tall plant (Tt) with a short plant (tt). Give the genotype and phenotype ratio of the offspring.', marks:4,
+       memo:'Cross Tt × tt → offspring genotypes: Tt, Tt, tt, tt. <b>Genotype ratio:</b> 1 Tt : 1 tt (or 2 Tt : 2 tt). <b>Phenotype ratio:</b> 1 tall : 1 short (50% tall, 50% short).'},
+    ]
+  },
+  {
+    id:'l3', name:'Evolution & Natural Selection',
+    summary:'Understand Darwin\'s theory of natural selection: variation exists in a population, some variations give a survival/reproductive advantage, and those individuals pass on their genes more often, shifting the population over time. Be ready to apply this to a given scenario (e.g. antibiotic resistance, peppered moths).',
+    questions:[
+      {q:'Explain, using the theory of natural selection, how a population of insects could become resistant to a pesticide over several generations.', marks:5,
+       memo:'Within the insect population there is natural genetic variation — some individuals happen to carry genes giving partial resistance to the pesticide. When the pesticide is applied, susceptible insects die, while resistant individuals survive and reproduce, passing the resistance genes to their offspring. Over successive generations, the proportion of resistant individuals in the population increases, until most of the population is resistant.'},
+    ]
+  },
+  {
+    id:'l4', name:'Human Reproduction',
+    summary:'Know the structure and function of the male and female reproductive systems, the menstrual cycle (hormones: FSH, LH, oestrogen, progesterone and their effects), and the process of fertilisation and early development.',
+    questions:[
+      {q:'Explain the role of progesterone in maintaining a pregnancy.', marks:3,
+       memo:'Progesterone (secreted first by the corpus luteum, later by the placenta) maintains the thickened, blood-rich uterine lining (endometrium), preventing menstruation, and inhibits further ovulation/contractions of the uterus — creating a stable environment for the developing embryo/foetus.'},
+    ]
+  },
+  {
+    id:'l5', name:'Nervous System & Homeostasis',
+    summary:'Know the structure of a neuron and how an impulse travels (reflex arc), plus the concept of homeostasis (maintaining a stable internal environment) — e.g. temperature regulation and blood glucose regulation via negative feedback.',
+    questions:[
+      {q:'Describe, in the correct order, the pathway of a reflex arc when a person touches a hot object.', marks:5,
+       memo:'Stimulus (heat) is detected by a <b>receptor</b> in the skin → impulse travels along a <b>sensory neuron</b> → to the <b>spinal cord</b>, where it passes through a <b>relay/interneuron</b> → impulse travels along a <b>motor neuron</b> → to an <b>effector</b> (muscle), which contracts to pull the hand away — all before the brain consciously registers the pain, making the response fast.'},
+    ]
+  },
+  {
+    id:'l6', name:'Human Impact on the Environment',
+    summary:'Understand key issues examiners like: greenhouse effect and global warming, loss of biodiversity, over-exploitation of resources, and pollution — and be ready to explain both causes and consequences, plus possible solutions.',
+    questions:[
+      {q:'Explain how an increase in atmospheric carbon dioxide contributes to global warming.', marks:3,
+       memo:'CO₂ is a greenhouse gas that allows short-wave radiation from the sun to pass through the atmosphere to warm the Earth\'s surface, but absorbs and re-radiates the longer-wave heat radiated back from the Earth, trapping it in the atmosphere. As CO₂ levels rise (from burning fossil fuels, deforestation etc.), more heat is trapped, raising average global temperatures.'},
+    ]
+  },
+  {
+    id:'l7', name:'Endocrine System',
+    summary:'Hormones are chemical messengers secreted by endocrine glands directly into the bloodstream, acting on specific target organs. Know the major glands (pituitary, thyroid, adrenal, pancreas) and their key hormones, and how hormonal control differs from nervous control.',
+    questions:[
+      {q:'Describe TWO differences between nervous control and hormonal (endocrine) control in the body.', marks:3,
+       memo:'Any two of: nervous impulses travel via neurons, hormones travel via the bloodstream; nervous responses are fast and short-lived, hormonal responses are slower but longer-lasting; nervous control affects specific, localised effectors, while hormonal control can affect multiple target organs at once (more widespread).'},
+      {q:'Name the hormone responsible for lowering blood glucose levels, and the gland that secretes it.', marks:2,
+       memo:'<b>Insulin</b>, secreted by the <b>pancreas</b> (specifically the beta cells of the Islets of Langerhans).'},
+    ]
+  },
+  {
+    id:'l8', name:'Genetics: Mutations & Genetic Disorders',
+    summary:'A mutation is a permanent change in the DNA sequence. Know the difference between gene mutations (e.g. point mutations) and chromosomal mutations, and be able to discuss a named genetic disorder (e.g. Down syndrome, albinism, haemophilia) in terms of its cause.',
+    questions:[
+      {q:'Explain what a point mutation is, and give one possible effect it could have on the protein produced.', marks:3,
+       memo:'A point mutation is a change in a single nucleotide base in the DNA sequence (substitution, insertion or deletion of one base). This can change the codon it forms, which may code for a different amino acid, altering the structure and function of the protein produced — though in some cases there is no effect, if the new codon still codes for the same amino acid.'},
+      {q:'Down syndrome is caused by an extra copy of chromosome 21 (trisomy 21). What type of mutation is this?', marks:2,
+       memo:'A <b>chromosomal mutation</b> — specifically non-disjunction (failure of chromosomes to separate properly) during meiosis, resulting in a gamete with an extra chromosome.'},
+    ]
+  },
+],
+geography: [
+  {
+    id:'g1', name:'Climate & Weather (Mid-latitude & Tropical Cyclones)',
+    summary:'Know how mid-latitude (temperate) cyclones and tropical cyclones form, their structure, and the weather associated with each stage. Be able to read and interpret a synoptic weather map (fronts, isobars, pressure systems).',
+    questions:[
+      {q:'Explain why the eye of a tropical cyclone is calm, while the eyewall around it has the most violent weather.', marks:4,
+       memo:'In the eye, air is sinking (subsiding), which suppresses cloud formation and produces calm, clear conditions with light winds. In the surrounding eyewall, warm moist air is rising rapidly, cooling and condensing to form towering cumulonimbus clouds, producing the strongest winds and heaviest rainfall in the whole system.'},
+    ]
+  },
+  {
+    id:'g2', name:'Geomorphology (Fluvial Processes & Landforms)',
+    summary:'Study how rivers shape landscapes through erosion, transportation and deposition — and the resulting landforms (waterfalls, meanders, oxbow lakes, floodplains, deltas). Know which processes dominate in the upper, middle and lower course of a river.',
+    questions:[
+      {q:'Describe, step by step, how an oxbow lake forms.', marks:5,
+       memo:'A river develops a meander (bend) as erosion occurs on the outer bank (faster current) and deposition occurs on the inner bank (slower current). Over time the meander becomes more pronounced/exaggerated. Eventually, during a flood, the river cuts through the narrow neck of land between the two closest points of the meander, taking the shorter, straighter path. Deposition then seals off the old meander bend, leaving it isolated from the main channel as a crescent-shaped <b>oxbow lake</b>.'},
+    ]
+  },
+  {
+    id:'g3', name:'Rural & Urban Settlement',
+    summary:'Understand settlement patterns and hierarchies, the differences between rural and urban settlements, and issues like urbanisation, informal settlements, and urban renewal/development strategies relevant to South African cities.',
+    questions:[
+      {q:'Give TWO push factors and TWO pull factors that explain rural-urban migration in South Africa.', marks:4,
+       memo:'<b>Push factors</b> (from rural areas): lack of job opportunities; limited access to services (healthcare, education). <b>Pull factors</b> (to urban areas): perceived better job opportunities; better access to services, infrastructure and amenities. (Any two valid push and two valid pull factors earn full marks.)'},
+    ]
+  },
+  {
+    id:'g4', name:'Economic Geography',
+    summary:'Covers the primary, secondary, tertiary and quaternary sectors of the economy, industrial location factors, and development issues. Be able to explain why an industry locates where it does using real factors (raw materials, markets, transport, labour, energy).',
+    questions:[
+      {q:'Name and briefly explain THREE factors that influence where a manufacturing industry chooses to locate.', marks:6,
+       memo:'Any three of: <b>Raw materials</b> — locating close to reduce transport costs of bulky/perishable inputs. <b>Market</b> — locating close to consumers to reduce transport costs of the finished product. <b>Transport</b> — access to roads, rail, ports or airports for moving goods. <b>Labour</b> — availability of a suitable (skilled or cheap) workforce. <b>Energy/power supply</b> — reliable access to electricity or other power sources.'},
+    ]
+  },
+  {
+    id:'g5', name:'Map Work: Scale & Distance',
+    summary:'On a topographic map, scale lets you convert map distance to real-world distance. Always show your working: measure map distance in cm, then use the scale ratio (or bar scale) to convert to real distance in metres/km.',
+    questions:[
+      {q:'On a 1:50 000 topographic map, the distance between two points measures 6 cm. Calculate the actual ground distance in kilometres.', marks:3,
+       memo:'Actual distance = map distance × scale = 6 cm × 50 000 = 300 000 cm. Convert to km: 300 000 cm ÷ 100 000 = <b>3 km</b>.'},
+    ]
+  },
+  {
+    id:'g6', name:'Map Work: Gradient & Cross-sections',
+    summary:'Gradient = vertical interval (rise) ÷ horizontal equivalent (run), always expressed as a ratio (e.g. 1:20). Measure the horizontal distance on the map (convert to the same units as the vertical interval, usually metres) between two contour points.',
+    questions:[
+      {q:'Two points on a map have a vertical interval (height difference) of 100 m and a horizontal equivalent of 2 000 m. Calculate the gradient.', marks:3,
+       memo:'Gradient = Vertical Interval ÷ Horizontal Equivalent = 100 ÷ 2000 = 0.05. Expressed as a ratio: divide both by the VI so VI = 1 → <b>1:20</b> (for every 20 m travelled horizontally, the land rises/falls 1 m).'},
+    ]
+  },
+  {
+    id:'g7', name:'Map Work: Area & Bearings',
+    summary:'Area calculations on topographic maps use the scale to convert grid squares (or measured shapes) into real ground area. Bearing/orientation questions ask for the compass direction or true bearing between two points, measured clockwise from north.',
+    questions:[
+      {q:'On a 1:50 000 map, a dam covers an area equivalent to 4 grid blocks, each block measuring 2 cm × 2 cm on the map. Calculate the actual area of the dam on the ground, in square kilometres.', marks:3,
+       memo:'Map distance per side of a block = 2 cm × 50 000 = 100 000 cm = 1 km. So each block represents 1 km × 1 km = 1 km² on the ground. 4 blocks = <b>4 km²</b>.'},
+      {q:'Explain the difference between a magnetic bearing and a true bearing.', marks:2,
+       memo:'A <b>true bearing</b> is measured clockwise from true north (the geographic North Pole), while a <b>magnetic bearing</b> is measured clockwise from magnetic north (the direction a compass needle points) — the two differ slightly due to magnetic declination.'},
+    ]
+  },
+  {
+    id:'g8', name:'Ocean Currents & Climate',
+    summary:'Ocean currents (warm and cold) significantly influence the climate of coastal areas. Know the effect of the warm Agulhas current and the cold Benguela current on South Africa\'s east and west coasts respectively.',
+    questions:[
+      {q:'Explain how the cold Benguela current affects the climate and rainfall of South Africa\'s west coast.', marks:4,
+       memo:'The cold Benguela current cools the air above it, increasing air pressure and stability, which suppresses convection and cloud formation. This results in generally low rainfall and a cooler, drier climate along the west coast — contributing to the arid conditions seen in areas like the Namib Desert — and can also produce advection fog where the cold air moves over warmer land.'},
+    ]
+  },
+],
+};
+
+/* ---------------- 2023 NSC Nov Past Papers (official DBE links, opens as PDF) ---------------- */
+const PAST_PAPERS = [
+  { subject:'English', color:'eng', groups:[
+    { name:'English HL', links:[
+      {label:'Paper 1', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=TbjDznPFtSA%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 1 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=KWZLnDejQBg%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 2', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=KLPJighLTHA%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 2 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=y6cq68rSCFw%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 3', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=wwZ88J_HrGE%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 3 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=nXCgrLfFghI%3d&tabid=4682&portalid=0&mid=12648'},
+    ]},
+    { name:'English FAL', links:[
+      {label:'Paper 1', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=rzKvzSdEjAU%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 1 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=AYG7HqfFU9g%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 2', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=8l6DnwdLPXY%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 2 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=I-DXMpEDoAA%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 3', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=ehLuStOw2jA%3d&tabid=4682&portalid=0&mid=12648'},
+      {label:'Paper 3 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=tJuU-3HKU7k%3d&tabid=4682&portalid=0&mid=12648'},
+    ]},
+  ]},
+  { subject:'Mathematics', color:'math', groups:[
+    { name:'Mathematics', links:[
+      {label:'Paper 1', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=M_7mZq2zE5o%3d&tabid=4682&portalid=0&mid=12681'},
+      {label:'Paper 1 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=ViEtlf4659c%3d&tabid=4682&portalid=0&mid=12681'},
+      {label:'Paper 2', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=Zoios-rCurI%3d&tabid=4682&portalid=0&mid=12681'},
+      {label:'Paper 2 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=0RJSBcYBmhA%3d&tabid=4682&portalid=0&mid=12681'},
+    ]},
+  ]},
+  { subject:'Physical Sciences', color:'sci', groups:[
+    { name:'Physical Sciences', links:[
+      {label:'Paper 1 + Memo', url:'https://stanmorephysics.com/wp-content/uploads/2024/02/NSC-Physical-Science-Grade-12-November-2023-P1-and-Memo.pdf'},
+      {label:'Paper 2 + Memo', url:'https://stanmorephysics.com/wp-content/uploads/2024/02/NSC-Physical-Science-Grade-12-November-2023-P2-and-Memo.pdf'},
+    ]},
+  ]},
+  { subject:'Life Sciences', color:'life', groups:[
+    { name:'Life Sciences', links:[
+      {label:'Paper 1', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=j4MXMW53vaU%3d&tabid=4682&portalid=0&mid=12679'},
+      {label:'Paper 1 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=FOVa0T-5xWI%3d&tabid=4682&portalid=0&mid=12679'},
+      {label:'Paper 2', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=8E7tqrHYRpc%3d&tabid=4682&portalid=0&mid=12679'},
+      {label:'Paper 2 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=qAWg2Im__MQ%3d&tabid=4682&portalid=0&mid=12679'},
+    ]},
+  ]},
+  { subject:'Geography', color:'geo', groups:[
+    { name:'Geography', links:[
+      {label:'Paper 1', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=C6opH1-FQIc%3d&tabid=4682&portalid=0&mid=12674'},
+      {label:'Paper 1 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=ZMlNHwfWqqc%3d&tabid=4682&portalid=0&mid=12674'},
+      {label:'Paper 2', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=71HfHVezh84%3d&tabid=4682&portalid=0&mid=12674'},
+      {label:'Paper 2 Memo', url:'https://www.education.gov.za/LinkClick.aspx?fileticket=x21geF5SQt4%3d&tabid=4682&portalid=0&mid=12674'},
+    ]},
+  ]},
+];
+function renderPastPapers(){
+  const el = document.getElementById('pastpapers');
+  el.innerHTML = PAST_PAPERS.map(s=>`
+    <div style="margin-bottom:14px;">
+      <div style="font-weight:700;font-size:14.5px;color:var(--${s.color});margin-bottom:6px;">${s.subject}</div>
+      ${s.groups.map(g=>`
+        <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">${g.name !== s.subject ? g.name : ''}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          ${g.links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener" class="mini" style="text-decoration:none;display:inline-block;">${l.label}</a>`).join('')}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+renderPastPapers();
+
+/* ---------------- Render topics ---------------- */
+function renderSubject(subjKey){
+  const container = document.getElementById('topics-'+subjKey);
+  container.innerHTML = '';
+  DATA[subjKey].forEach(topic=>{
+    const done = localStorage.getItem('done_'+topic.id) === '1';
+    const div = document.createElement('div');
+    div.className = 'topic' + (done ? '' : '');
+    div.innerHTML = `
+      <div class="topic-head">
+        <input type="checkbox" data-id="${topic.id}" ${done?'checked':''}>
+        <h3>${topic.name}</h3>
+        <span class="chev">▾</span>
+      </div>
+      <div class="topic-body">
+        <p class="topic-summary">${topic.summary}</p>
+        ${topic.questions.map((q,i)=>`
+          <div class="q">
+            <div class="q-head">
+              <p class="q-text">${i+1}. ${q.q}</p>
+              <span class="marks">[${q.marks}]</span>
+            </div>
+            <div class="q-actions">
+              <button class="mini" onclick="toggleMemo(this)">Show memo</button>
+              <button class="mini ask" onclick="askAboutQuestion('${subjKey}', ${JSON.stringify(topic.name)}, ${JSON.stringify(q.q)})">Explain with AI tutor</button>
+            </div>
+            <div class="memo">${q.memo}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
+    div.querySelector('.topic-head').addEventListener('click', (e)=>{
+      if(e.target.tagName === 'INPUT') return;
+      div.classList.toggle('open');
+    });
+    div.querySelector('input[type=checkbox]').addEventListener('change', (e)=>{
+      localStorage.setItem('done_'+topic.id, e.target.checked ? '1':'0');
+      updateProgress();
+    });
+  });
+}
+function toggleMemo(btn){
+  const memo = btn.closest('.q').querySelector('.memo');
+  memo.classList.toggle('show');
+  btn.textContent = memo.classList.contains('show') ? 'Hide memo' : 'Show memo';
+}
+['english','maths','science','lifesci','geography'].forEach(renderSubject);
+
+function updateProgress(){
+  ['english','maths','science','lifesci','geography'].forEach(key=>{
+    const topics = DATA[key];
+    const doneCount = topics.filter(t=>localStorage.getItem('done_'+t.id)==='1').length;
+    const pct = Math.round((doneCount/topics.length)*100);
+    document.getElementById('pct-'+key).textContent = pct + '% done';
+    document.getElementById('bar-'+key).style.width = pct + '%';
+  });
+}
+updateProgress();
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const subj = tab.dataset.subject;
+    document.querySelectorAll('main section').forEach(s=>s.style.display='none');
+    document.getElementById('panel-'+subj).style.display='block';
+  });
+});
+
+/* ---------------- AI Tutor (Groq) ---------------- */
+const groqKeyInput = document.getElementById('groqKey');
+const savedKey = localStorage.getItem('groqKey') || '';
+groqKeyInput.value = savedKey;
+document.getElementById('saveKey').addEventListener('click', ()=>{
+  localStorage.setItem('groqKey', groqKeyInput.value.trim());
+  logMessage('ai', 'Key saved for this browser. Ask away!');
+});
+
+const chatlog = document.getElementById('chatlog');
+function logMessage(who, text){
+  const div = document.createElement('div');
+  div.className = 'msg ' + (who==='user' ? 'user':'ai');
+  div.innerHTML = who==='user' ? `<b>You:</b> ${escapeHtml(text)}` : `<b>Tutor:</b> ${escapeHtml(text)}`;
+  chatlog.appendChild(div);
+  chatlog.scrollTop = chatlog.scrollHeight;
+}
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+
+function askAboutQuestion(subjKey, topicName, questionText){
+  const subjMap = {english:'English', maths:'Mathematics', science:'Physical Sciences', lifesci:'Life Sciences', geography:'Geography'};
+  document.getElementById('tutorSubject').value = subjMap[subjKey];
+  document.getElementById('chatInput').value = `Please explain, step by step, how to answer this ${topicName} question:\n\n${questionText}`;
+  document.querySelector('.tutor').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---- Image attach (upload or paste screenshot) ---- */
+let attachedImageDataUrl = null;
+function setAttachedImage(dataUrl){
+  attachedImageDataUrl = dataUrl;
+  document.getElementById('imagePreview').src = dataUrl;
+  document.getElementById('imagePreviewRow').style.display = 'block';
+}
+function clearAttachedImage(){
+  attachedImageDataUrl = null;
+  document.getElementById('imagePreviewRow').style.display = 'none';
+}
+document.getElementById('clearImage').addEventListener('click', clearAttachedImage);
+document.getElementById('uploadBtn').addEventListener('click', ()=> document.getElementById('imageFile').click());
+document.getElementById('imageFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=> setAttachedImage(reader.result);
+  reader.readAsDataURL(file);
+});
+document.getElementById('chatInput').addEventListener('paste', (e)=>{
+  const items = e.clipboardData?.items || [];
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      const file = item.getAsFile();
+      const reader = new FileReader();
+      reader.onload = ()=> setAttachedImage(reader.result);
+      reader.readAsDataURL(file);
+      e.preventDefault();
+      break;
+    }
+  }
+});
+
+async function sendToTutor(){
+  const key = groqKeyInput.value.trim() || localStorage.getItem('groqKey');
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!key){ logMessage('ai', 'Please paste your Groq API key above and click "Save key" first.'); return; }
+  if(!text && !attachedImageDataUrl) return;
+  logMessage('user', text || '[Photo attached]');
+  input.value = '';
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true; sendBtn.textContent = 'Thinking…';
+  const subject = document.getElementById('tutorSubject').value;
+  const systemPrompt = `You are a patient, encouraging Grade 12 CAPS tutor in South Africa, helping a student prepare for the NSC final exams in ${subject}. Explain concepts step by step in plain, simple language, as if teaching someone who is currently struggling with the subject. Use short paragraphs or numbered steps. Where relevant, show full working (for maths/science) the way a marker would expect it, and end with a one-line summary of the key idea. If a photo of a question is included, first read it carefully, then answer it fully. Keep answers focused and not overly long.`;
+
+  // Use a vision-capable model when a photo is attached, otherwise a fast text model.
+  const model = attachedImageDataUrl ? 'qwen/qwen3.6-27b' : 'openai/gpt-oss-120b';
+  const userContent = attachedImageDataUrl
+    ? [
+        {type:'text', text: text || 'Please explain this question step by step.'},
+        {type:'image_url', image_url:{url: attachedImageDataUrl}}
+      ]
+    : text;
+
+  try{
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body: JSON.stringify({
+        model: model,
+        messages:[{role:'system', content: systemPrompt},{role:'user', content: userContent}],
+        temperature:0.4
+      })
+    });
+    const data = await res.json();
+    if(data.error){
+      logMessage('ai', 'Error: ' + data.error.message);
+    } else {
+      const reply = data.choices?.[0]?.message?.content || 'No response received.';
+      logMessage('ai', reply);
+    }
+  }catch(err){
+    logMessage('ai', 'Something went wrong reaching Groq: ' + err.message);
+  }
+  clearAttachedImage();
+  sendBtn.disabled = false; sendBtn.textContent = 'Ask';
+}
+document.getElementById('sendBtn').addEventListener('click', sendToTutor);
+document.getElementById('chatInput').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendToTutor(); }
+});
+
+logMessage('ai', "Hi! Pick a subject above, then ask me anything. You can also click \"Explain with AI tutor\" next to any question, or paste/upload a photo of a question from a textbook or past paper and I'll talk you through it.");
+</script>
+</body>
+</html>
