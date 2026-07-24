@@ -237,21 +237,36 @@ footer{max-width:1080px;margin:0 auto;padding:20px 24px 50px;color:#8790A0;font-
       <img id="imagePreview" style="max-height:90px;border-radius:6px;border:1px solid var(--line);vertical-align:middle;">
       <button class="mini" id="clearImage" style="vertical-align:middle;margin-left:8px;">Remove photo</button>
     </div>
+    <div id="pdfPreviewRow" style="display:none; margin-bottom:8px;">
+      <span class="mini" style="display:inline-flex;align-items:center;gap:8px;cursor:default;">
+        📄 <span id="pdfFileName"></span> <span id="pdfPageCount" style="color:var(--muted);"></span>
+      </span>
+      <button class="mini" id="clearPdf" style="vertical-align:middle;margin-left:8px;">Remove PDF</button>
+    </div>
     <div class="chat-row">
-      <textarea id="chatInput" placeholder="e.g. Explain how to find the equation of a tangent to a curve, step by step. You can also paste (Ctrl+V) or upload a photo of a question."></textarea>
+      <textarea id="chatInput" placeholder="e.g. Explain how to find the equation of a tangent to a curve, step by step. You can also paste (Ctrl+V) or upload a photo/PDF of a question."></textarea>
       <button id="sendBtn">Ask</button>
     </div>
     <div class="q-actions" style="margin-top:8px;">
       <button class="mini" id="uploadBtn">📷 Upload photo / screenshot</button>
       <input type="file" id="imageFile" accept="image/*" style="display:none;">
+      <button class="mini" id="uploadPdfBtn">📄 Upload PDF (past paper, notes)</button>
+      <input type="file" id="pdfFile" accept="application/pdf" style="display:none;">
       <span class="small-note" style="margin:0;">or paste a screenshot straight into the message box (Ctrl+V)</span>
     </div>
+    <p class="small-note" id="pdfStatus"></p>
     <p class="small-note">Your API key is stored only in this browser (localStorage) and is never shown to anyone else who opens this file on a different device. Because the key is visible in this page's saved copy, don't share this HTML file publicly once your key is in it — if that happens, regenerate the key on console.groq.com.</p>
   </div>
 </main>
 
 <footer>Built for exam season · CAPS-aligned Grade 12 revision · Keep going, one topic at a time.</footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+</script>
 <script>
 /* ---------------- Countdown ---------------- */
 const examDateInput = document.getElementById('examDate');
@@ -856,6 +871,58 @@ function clearAttachedImage(){
 }
 document.getElementById('clearImage').addEventListener('click', clearAttachedImage);
 document.getElementById('uploadBtn').addEventListener('click', ()=> document.getElementById('imageFile').click());
+
+/* ---- PDF attach (extract text with pdf.js) ---- */
+const MAX_PDF_CHARS = 24000; // keep prompt size sane for the model
+let attachedPdfText = null;
+let attachedPdfName = '';
+
+function setPdfStatus(text){
+  document.getElementById('pdfStatus').textContent = text;
+}
+
+async function extractPdfText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let fullText = '';
+  const pageCount = pdf.numPages;
+  for(let i=1; i<=pageCount; i++){
+    setPdfStatus(`Reading page ${i} of ${pageCount}…`);
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(it => it.str).join(' ');
+    fullText += `\n\n--- Page ${i} ---\n` + pageText;
+    if(fullText.length > MAX_PDF_CHARS) break;
+  }
+  return {text: fullText.slice(0, MAX_PDF_CHARS), pageCount};
+}
+
+document.getElementById('uploadPdfBtn').addEventListener('click', ()=> document.getElementById('pdfFile').click());
+document.getElementById('pdfFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!window.pdfjsLib){ setPdfStatus('PDF reader failed to load. Check your connection and try again.'); return; }
+  attachedPdfName = file.name;
+  setPdfStatus('Reading PDF…');
+  try{
+    const {text, pageCount} = await extractPdfText(file);
+    attachedPdfText = text;
+    document.getElementById('pdfFileName').textContent = file.name;
+    document.getElementById('pdfPageCount').textContent = `(${pageCount} page${pageCount===1?'':'s'}${text.length>=MAX_PDF_CHARS ? ', truncated' : ''})`;
+    document.getElementById('pdfPreviewRow').style.display = 'block';
+    setPdfStatus('PDF loaded — ask your question below and I\'ll use it as context.');
+  }catch(err){
+    setPdfStatus('Could not read that PDF: ' + err.message + ' (scanned/image-only PDFs aren\'t supported yet — try a photo of the specific question instead.)');
+  }
+  document.getElementById('pdfFile').value = '';
+});
+function clearAttachedPdf(){
+  attachedPdfText = null;
+  attachedPdfName = '';
+  document.getElementById('pdfPreviewRow').style.display = 'none';
+  setPdfStatus('');
+}
+document.getElementById('clearPdf').addEventListener('click', clearAttachedPdf);
 document.getElementById('imageFile').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -883,21 +950,27 @@ async function sendToTutor(){
   const text = input.value.trim();
   if(!key){ logMessage('ai', 'Please paste your Groq API key above and click "Save key" first.'); return; }
   if(!text && !attachedImageDataUrl) return;
-  logMessage('user', text || '[Photo attached]');
+  logMessage('user', text || (attachedPdfText ? `[PDF attached: ${attachedPdfName}]` : '[Photo attached]'));
   input.value = '';
   const sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true; sendBtn.textContent = 'Thinking…';
   const subject = document.getElementById('tutorSubject').value;
-  const systemPrompt = `You are a patient, encouraging Grade 12 CAPS tutor in South Africa, helping a student prepare for the NSC final exams in ${subject}. Explain concepts step by step in plain, simple language, as if teaching someone who is currently struggling with the subject. Use short paragraphs or numbered steps. Where relevant, show full working (for maths/science) the way a marker would expect it, and end with a one-line summary of the key idea. If a photo of a question is included, first read it carefully, then answer it fully. Keep answers focused and not overly long.`;
+  const systemPrompt = `You are a patient, encouraging Grade 12 CAPS tutor in South Africa, helping a student prepare for the NSC final exams in ${subject}. Explain concepts step by step in plain, simple language, as if teaching someone who is currently struggling with the subject. Use short paragraphs or numbered steps. Where relevant, show full working (for maths/science) the way a marker would expect it, and end with a one-line summary of the key idea. If a photo of a question is included, first read it carefully, then answer it fully. If text extracted from an uploaded PDF (e.g. a past paper) is included as context, use it to find and answer the specific question(s) the student is asking about — quote the question number if one is present. Keep answers focused and not overly long.`;
 
   // Use a vision-capable model when a photo is attached, otherwise a fast text model.
   const model = attachedImageDataUrl ? 'qwen/qwen3.6-27b' : 'openai/gpt-oss-120b';
+
+  let textForModel = text || 'Please explain this question step by step.';
+  if(attachedPdfText){
+    textForModel = `Context extracted from uploaded PDF "${attachedPdfName}":\n"""\n${attachedPdfText}\n"""\n\nUsing the context above, answer this: ${text || 'Explain the key questions in this document and how to approach them.'}`;
+  }
+
   const userContent = attachedImageDataUrl
     ? [
-        {type:'text', text: text || 'Please explain this question step by step.'},
+        {type:'text', text: textForModel},
         {type:'image_url', image_url:{url: attachedImageDataUrl}}
       ]
-    : text;
+    : textForModel;
 
   try{
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -920,6 +993,7 @@ async function sendToTutor(){
     logMessage('ai', 'Something went wrong reaching Groq: ' + err.message);
   }
   clearAttachedImage();
+  clearAttachedPdf();
   sendBtn.disabled = false; sendBtn.textContent = 'Ask';
 }
 document.getElementById('sendBtn').addEventListener('click', sendToTutor);
